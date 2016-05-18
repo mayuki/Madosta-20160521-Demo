@@ -1,0 +1,44 @@
+﻿@using System.Security.Claims
+@using WebApplication6.Models
+@using WebApplication6.Infrastracture
+@{
+    ViewBag.Title = "RequireFidoRegistration";
+}
+<script>
+    var challenge = '@FidoAuthenticator.GetChallenge()';
+    var userAccountInformation = {
+        rpDisplayName: 'Windows Konnichiwa!',
+        displayName: '@(((ClaimsIdentity)User.Identity).GetUserId())',
+        name: '@(((ClaimsIdentity)User.Identity).GetUserId())',
+        id: '@(((ClaimsIdentity)User.Identity).GetUserId())'
+    };
+    var cryptoParams = [
+        {
+            type: "ScopedCred",
+            algorithm: "RSASSA-PKCS1-v1_5",
+        }
+    ];
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelector('#register').addEventListener('click', () => {
+            webauthn.makeCredential(userAccountInformation, cryptoParams, challenge)
+                .then(function (creds) {
+                    window.sessionStorage.setItem('credentialID.' + creds.credential.id, creds.credential.id);
+                    window.sessionStorage.setItem('credentialIDRegistered', 'true');
+                    document.querySelector('[name=id]').value = creds.credential.id;
+                    document.querySelector('[name=publicKey]').value = JSON.stringify(creds.publicKey);
+                    document.querySelector('form').submit();
+                }).catch(function (err) {
+                    alert(err);
+                });
+        });
+    })
+</script>
+
+<h2>Windows Helloで登録</h2>
+
+<form action="@Url.Action("RegisterFidoPubkey")" method="POST">
+    @Html.Hidden("id")
+    @Html.Hidden("publicKey")
+</form>
+
+<button id="register" class="btn btn-primary">登録する</button>

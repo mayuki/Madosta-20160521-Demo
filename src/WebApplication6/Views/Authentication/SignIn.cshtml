@@ -1,0 +1,137 @@
+﻿@model WebApplication6.ViewModels.Authentication.AuthenticationIndexViewModel
+@using WebApplication6.Models
+@{
+    ViewBag.Title = "Index";
+}
+
+<script>
+    var challenge = '@FidoAuthenticator.GetChallenge()';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.webauthn && (window.sessionStorage && window.sessionStorage.getItem('credentialIDRegistered'))) {
+            document.querySelector('#signin-with-windowshello-panel').style.display = 'block';
+
+            document.querySelector('#reset-key').addEventListener('click', (e) => {
+                e.preventDefault();
+                window.sessionStorage.clear();
+                window.location.reload();
+            });
+            document.querySelector('#signin-with-windowshello input[type=button]').addEventListener('click', () => {
+                webauthn.getAssertion(challenge, {}, [
+                        {
+                            type: 'ScopedCred',
+                            id: document.querySelector('#signin-with-windowshello input[name=UserName]').value
+                        }
+                ])
+                    .then(function (assertion) {
+                        document.querySelector("[name=Id]").value = assertion.credential.id;
+                        document.querySelector("[name=Type]").value = assertion.credential.type;
+                        document.querySelector("[name=ClientData]").value = assertion.clientData;
+                        document.querySelector("[name=Signature]").value = assertion.signature;
+                        document.querySelector("[name=AuthenticatorData]").value = assertion.authenticatorData;
+                        document.querySelector("[name=Challenge]").value = challenge;
+                        document.querySelector("#signin-with-windowshello").submit();
+                    })
+                    .catch(function (err) {
+                        alert(err);
+                    });
+            });
+        }
+    });
+</script>
+
+<h2>SignIn</h2>
+
+@if (Model.AuthenticationFailed)
+{
+    <div class="alert alert-danger" role="alert">
+        <p>認証失敗なのです</p>
+    </div>
+}
+@if (Model.RegistrationSucceeded)
+{
+    <div class="alert alert-info" role="alert">
+        <p>ユーザーを登録しました。サインインしてください。</p>
+    </div>
+}
+@if (Model.RegistrationFailed)
+{
+    <div class="alert alert-danger" role="alert">
+        <p>ユーザー登録失敗なのです。すでに登録されているか入力内容が不足しています。</p>
+    </div>
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4" id="signin-with-windowshello-panel" style="display:none;">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Sign In with Windows Hello</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <form id="signin-with-windowshello" method="POST" asp-action="Authenticate">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="UserName" name="UserName" value="">
+                            </div>
+
+                            @Html.Hidden("UseFido", "true")
+                            @Html.Hidden("Challenge")
+                            @Html.Hidden("Id")
+                            @Html.Hidden("Type")
+                            @Html.Hidden("ClientData")
+                            @Html.Hidden("Signature")
+                            @Html.Hidden("AuthenticatorData")
+                            <input type="button" value="Sign In with Windows Hello" class="btn btn-primary"> <button id="reset-key" class="btn btn-warning">Reset</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="panel panel-primary" id="signin-with-password-panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Sign In</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <form id="signin-with-password" method="POST" asp-action="Authenticate">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="alice@example.com" name="UserName" value="@Model.UserName">
+                            </div>
+                            <div class="form-group">
+                                <input type="password" class="form-control" placeholder="Password" name="Password">
+                            </div>
+                            <input type="submit" value="Sign In" class="btn btn-primary" />
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Sign Up (新しいユーザーを登録)</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <form method="POST" asp-action="SignUp">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="UserName" name="UserName" value="">
+                            </div>
+                            <div class="form-group">
+                                <input type="password" class="form-control" placeholder="Password" name="Password">
+                            </div>
+                            <input type="submit" value="Create New User" class="btn btn-primary" />
+                        </form>
+                    </div>
+                    <div class="alert alert-warning">ユーザーは永続化されず、サーバーが再起動すると削除されます</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

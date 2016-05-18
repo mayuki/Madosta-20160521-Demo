@@ -1,0 +1,16 @@
+﻿@{
+    ViewBag.Title = "Beacon";
+}
+<h1>Beacon</h1>
+<h2><a href="http://www.w3.org/TR/beacon/">http://www.w3.org/TR/beacon/</a></h2>
+
+<button id="button-01">Send Beacon</button>
+
+<script>
+    "use strict";
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelector('#button-01').addEventListener('click', (e) => {
+            navigator.sendBeacon('/Home/Collector', JSON.stringify({ time: Date.now, event: 'clicked' }));
+        });
+    });
+</script>

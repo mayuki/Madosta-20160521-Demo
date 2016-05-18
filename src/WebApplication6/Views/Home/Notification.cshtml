@@ -1,0 +1,17 @@
+﻿@{
+    ViewBag.Title = "WebNotification";
+}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelector('#button-01').addEventListener('click', () => {
+            window.Notification.requestPermission(x => {
+                new Notification('Hello!', { body: 'Konnichiwa!', icon: 'https://c2.staticflickr.com/2/1532/24478910224_af627636be_q.jpg' }).onclick = () => alert('Clicked');
+            });
+        });
+    });
+</script>
+
+<h1>Web Notificaiton</h1>
+<div>
+    <button id="button-01" class="btn btn-primary">Notify</button>
+</div>
